@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Freedom Finance - Transactions</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://unpkg.com/rivescript@latest/dist/rivescript.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0/dist/fuse.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/currency.js/2.0.4/currency.min.js"></script>
+</head>
+<body>
+
+  <div class="dashboard-layout">
+    
+    <aside class="sidebar">
+      <div class="brand-header">
+        <img src="LogInLogo.png" alt="Logo" class="brand-logo">
+        <div class="brand-text">
+          <span class="text-dark">Freedom</span><span class="text-blue">Finance</span>
+        </div>
+      </div>
+
+      <div class="sidebar-balance-card">
+        <div class="s-balance-label">TOTAL BALANCE</div>
+        <div class="s-balance-amount" id="side-balance">$3,897.11</div>
+        <div class="s-balance-sub" id="side-savings-pct">0% of income saved</div>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-label">OVERVIEW</div>
+        <button class="nav-item" onclick="window.location.href='dashboard.html'">
+          <span class="nav-icon">𓃑</span> Dashboard
+        </button>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-label">MANAGE</div>
+        <button class="nav-item active">
+          <span class="nav-icon">💵</span> Transactions
+          <span class="status-dot"></span>
+        </button>
+        <button class="nav-item" onclick="window.location.href='budget.html'">
+          <span class="nav-icon">💰</span> Budget
+        </button>
+        <div class="nav-section">
+        <button class="nav-item" onclick="window.location.href='reports.html'">
+          <span class="nav-icon">📝</span> Reports
+        </button>
+        <span class="status-dot"></span>
+      </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="user-profile">
+          <div class="user-avatar">~</div>
+          <div class="user-info">
+            <div class="user-name">User</div>
+            <div class="user-type">Personal account</div>
+          </div>
+        </div>
+        <button class="sign-out-btn" onclick="window.logoutUser()">Sign out</button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="page-header" style="align-items: center;">
+        <div>
+          <h1 class="greeting">Transactions</h1>
+          <p class="current-date" id="txCount">0 transactions</p>
+        </div>
+        <button class="btn-primary" onclick="openTxModalAdd()">+ Add Transaction</button>
+      </header>
+
+            <div class="table-toolbar">
+        <div class="search-box">
+          <span style="margin-right: 8px; opacity: 0.5;">🔍</span>
+          <input type="text" id="searchTx" placeholder="Search transactions..." />
+        </div>
+        <div class="filter-group">
+          <select id="filterType" class="filter-select">
+            <option value="all">All types</option>
+            <option value="income">Income</option>
+            <option value="expense">Expense</option>
+            <option value="savings">Savings</option>
+            <option value="investment">Investment</option>
+          </select>
+          <select id="filterCategory" class="filter-select">
+            <option value="all">All categories</option>
+          </select>
+        </div>
+      </div>
+
+
+      <section class="transaction-panel panel-card" style="padding: 0;">
+        <div id="allList">
+          </div>
+      </section>
+    </main>
+
+  <div class="modal hidden" id="txModal" onclick="backdropClose(event,'txModal')">
+    <div class="modal-content" role="dialog" aria-modal="true">
+      <div class="modal-top">
+        <h3 id="txModalTitle">Add Transaction</h3>
+        <button class="close-x" onclick="closeModal('txModal')" aria-label="Close">✕</button>
+      </div>
+      <div class="grid2">
+        <div>
+          <label for="txType">Type</label>
+          <select id="txType">
+            <option value="income">Income (Paycheck)</option>
+            <option value="expense" selected>Expense</option>
+            <option value="savings">Savings</option>
+            <option value="investment">Investment</option>
+          </select>
+        </div>
+        <div>
+          <label for="txDate">Date</label>
+          <input id="txDate" type="date" />
+        </div>
+      </div>
+      <label for="txDesc">Description</label>
+      <input id="txDesc" placeholder="e.g., Groceries" />
+      <div class="grid2">
+        <div>
+          <label for="txAmount">Amount (positive)</label>
+          <input id="txAmount" type="number" step="0.01" />
+        </div>
+        <div>
+          <label for="txCategory">Category</label>
+          <select id="txCategory" onchange="onTxCategoryChange()"></select>
+          <input id="txNewCategory" class="hidden" aria-label="New category name" placeholder="New category name..." />
+        </div>
+      </div>
+      <div class="error" id="txError"></div>
+      <div class="actions">
+        <button class="btn secondary" onclick="closeModal('txModal')">Cancel</button>
+        <button class="btn primary" id="txSaveBtn" onclick="saveTransaction()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <button id="spark-fab" onclick="toggleChat()">✨</button>
+  <div id="spark-chat-window" class="hidden">
+    <div class="chat-header">
+  <div class="chat-header-info">
+    <div class="chat-header-avatar">✦</div>
+    <div class="chat-header-text">
+      <span class="chat-header-name">Spark AI</span>
+      <span class="chat-header-status">Online now</span>
+    </div>
+  </div>
+  <button type="button" class="close-chat" onclick="toggleChat()">✕</button>
+</div>
+    <div class="chat-body" id="spark-chat-body">
+      <div class="chat-msg bot">Hi! I'm Spark ✨ — Type to get started!</div>
+    </div>
+    <div class="chat-input">
+      <input type="text" id="spark-input" placeholder="Type a message..." disabled />
+      <button id="spark-send-btn" onclick="handleSparkSend()" disabled>Send</button>
+    </div>
+  </div>
+</div>
+  <script src="script.js"></script>
+</body>
+</html>
